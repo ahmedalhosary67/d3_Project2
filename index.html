@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .cooltip {
+            background: white;
+            border: 1px solid lightgrey;
+            padding: 10px;
+            position: absolute;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+
+        .county {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .caseTotal {
+            font-size: 14px;
+        }
+
+        .cases {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .lineChart {
+            float: left;
+            width: 100px;
+            height: 50px;
+            color: grey;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>hello world</h1>
+    <ul>
+        <li>
+            hello1
+        </li>
+        <li>
+            hello2
+        </li>
+    </ul>
+    <!-- <canvas></canvas> -->
+    <div id="svg_by_d3" class="text-center"></div>
+    <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="d3.min.js"></script>
+    <script type="text/javascript" src="topojson-client.min.js"></script>
+    <script type="text/javascript" src="versor.js"></script>
+    <script>
+        (() => {
+            const width = 975;
+            const height = 550;
+
+            const zoom = d3.zoom()
+                .scaleExtent([1, 4])
+                .on("zoom", zoomed);
+
+            const root = d3.create("div")
+                .attr("class", "root");
+
+            const svg = root.append("svg")
+                .attr("viewBox", [0, -20, width, height])
+                .on("click", reset);
+
+            const g = svg.append("g");
+
+            const projection = d3.geoAlbersUsa()
+                .fitSize([width, height], topojson.feature(maryland, maryland.objects.Maryland_Counties))
+
+            const tooltip = root
+                .append("div")
+                .attr("class", "cooltip");
+
+            const path = d3.geoPath()
+                .projection(projection);
+
+            svg.append("g")
+                .attr("transform", "translate(20,35)")
+            // .append(() => legend({
+            //     color: d3.scaleSequential([extent[0], extent[1]], d3.interpolateOranges),
+            //     title: "Total cases per 100,000",
+            //     width: 300
+            // }));
+
+            g.append("g")
+                .attr("cursor", "pointer")
+                .attr("stroke", "grey")
+                .attr("stroke-width", 0.75)
+                .selectAll("path")
+                .data(topojson.feature(maryland, maryland.objects.Maryland_Counties).features)
+                .join("path")
+                // .attr("fill", d => color(mdcases.get(d.properties.FIPS)))
+                .on("click", clicked)
+                .attr("d", path)
+                .on('mouseover', function (d) {
+                    this.classList.add('hovered')
+                    d3.select(this)
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 3)
+                        .raise()
+                    tooltip.style('display', '');
+                    let node = tooltip.node();
+                    node.innerHTML = "";
+                    // node.appendChild(getTooltipContents(d));
+                })
+                .on('mousemove', function () {
+                    const rootBounds = root.node().getBoundingClientRect();
+                    const mouseX = d3.event.pageX - rootBounds.left;
+                    const mouseY = d3.event.pageY - rootBounds.top;
+                    tooltip
+                        .style('top', Math.min((mouseY - 10), root.node().offsetHeight - 135) + 'px')
+                        .style('left', (mouseX + 155 <= root.node().offsetWidth ? (mouseX + 10) : (mouseX - 155)) + 'px')
+                        .style('display', 'block')
+                })
+                .on('mouseout', function () {
+                    this.classList.remove('hovered')
+                    d3.select(this)
+                        .attr("stroke", null)
+                        .attr("stroke-width", 1)
+                        .lower()
+                    tooltip.style('display', 'none')
+                });
+
+            svg.call(zoom);
+
+            function reset() {
+                svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity,
+                    d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
+                );
+            }
+
+            function clicked(d) {
+                const [[x0, y0], [x1, y1]] = path.bounds(d);
+                d3.event.stopPropagation();
+                svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity
+                        .translate(width / 2, height / 2)
+                        .scale(Math.min(3, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
+                        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                    d3.mouse(svg.node())
+                );
+            }
+
+            function zoomed() {
+                const { transform } = d3.event;
+                g.attr("transform", transform);
+                g.attr("stroke-width", 1 / transform.k);
+            }
+
+            window.addEventListener("resize", () => resized(width, root, svg));
+            setTimeout(() => resized(width, root, svg), 12);
+            console.log(root);
+            document.querySelector("#svg_by_d3").append(root.node())
+            return root.node();
+        })()
+    </script>
+    <script>
+        function resized(width, root, svg) {
+            let measuredWidth = root.node().getBoundingClientRect().width;
+            if (measuredWidth == 0) {
+                setTimeout(() => resized(width, root, svg), 12);
+                return;
+            }
+            let scale = width / measuredWidth;
+            svg.selectAll("line").attr("stroke-width", scale + "px");
+            svg.selectAll("text").attr("transform", "scale(" + scale + " " + scale + ")");
+        }
+        getTooltipContents = d => {
+            function getlowestfraction(x0) {
+                var eps = 0.01;
+                var h, h1, h2, k, k1, k2, a, x;
+
+                x = x0;
+                a = Math.floor(x);
+                h1 = 1;
+                k1 = 0;
+                h = a;
+                k = 1;
+
+                while (x - a > eps * k * k) {
+                    x = 1 / (x - a);
+                    a = Math.floor(x);
+                    h2 = h1;
+                    h1 = h;
+                    k2 = k1;
+                    k1 = k;
+                    h = h2 + a * h1;
+                    k = k2 + a * k1;
+                }
+
+                return h + " in " + k + " residents";
+            }
+
+            return ` <div class = "container">
+  
+  <div class = "county"> ${d.properties.NAME} </div>
+  
+  <div class = "totalCases">
+    <div class = "caseTotal"> Cases per 100,000: <br> ${d3.format(",.0f")(mdcases.get(d.properties.FIPS))}</div>
+    <div class = "cases"> ${getlowestfraction(mdcases.get(d.properties.FIPS) / 100000)} 
+    </div>
+  </div>
+</div> `;
+        }
+    </script>
+
+</body>
+
+</html>
