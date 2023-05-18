@@ -41,20 +41,19 @@
 
 <body>
     <h1>hello world</h1>
-    <ul>
-        <li>
-            hello1
-        </li>
-        <li>
-            hello2
-        </li>
-    </ul>
+    <div class="container">
+        <div class="map">Alternative content</div>
+    </div>
     <!-- <canvas></canvas> -->
     <div id="svg_by_d3" class="text-center"></div>
+    <!-- <script type="text/javascript" src="jquery-3.6.1.min.js"></script> -->
+    <!-- <script type="text/javascript" src="jquery.mapael.min.js"></script> -->
     <script type="text/javascript" src="data.js"></script>
-    <script type="text/javascript" src="d3.min.js"></script>
     <script type="text/javascript" src="topojson-client.min.js"></script>
+    <script type="text/javascript" src="d3.min.js"></script>
+    <script type="text/javascript" src="d3-legend.min.js"></script>
     <script type="text/javascript" src="versor.js"></script>
+
     <script>
         (() => {
             const width = 975;
@@ -106,16 +105,18 @@
                     d3.select(this)
                         .attr("stroke", "black")
                         .attr("stroke-width", 3)
+                        .attr("name", 3)
                         .raise()
                     tooltip.style('display', '');
                     let node = tooltip.node();
                     node.innerHTML = "";
+                    console.log(d);
                     // node.appendChild(getTooltipContents(d));
                 })
-                .on('mousemove', function () {
+                .on('mousemove', function (event) {
                     const rootBounds = root.node().getBoundingClientRect();
-                    const mouseX = d3.event.pageX - rootBounds.left;
-                    const mouseY = d3.event.pageY - rootBounds.top;
+                    const mouseX = event.pageX - rootBounds.left;
+                    const mouseY = event.pageY - rootBounds.top;
                     tooltip
                         .style('top', Math.min((mouseY - 10), root.node().offsetHeight - 135) + 'px')
                         .style('left', (mouseX + 155 <= root.node().offsetWidth ? (mouseX + 10) : (mouseX - 155)) + 'px')
@@ -142,7 +143,7 @@
 
             function clicked(d) {
                 const [[x0, y0], [x1, y1]] = path.bounds(d);
-                d3.event.stopPropagation();
+                event.stopPropagation();
                 svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity
@@ -154,30 +155,31 @@
             }
 
             function zoomed() {
-                const { transform } = d3.event;
+                const { transform } = event;
                 g.attr("transform", transform);
                 g.attr("stroke-width", 1 / transform.k);
             }
 
-            window.addEventListener("resize", () => resized(width, root, svg));
-            setTimeout(() => resized(width, root, svg), 12);
-            console.log(root);
+            // window.addEventListener("resize", () => resized(width, root, svg));
+            // setTimeout(() => resized(width, root, svg), 12);
+            // console.log(root);
             document.querySelector("#svg_by_d3").append(root.node())
             return root.node();
         })()
     </script>
     <script>
-        function resized(width, root, svg) {
-            let measuredWidth = root.node().getBoundingClientRect().width;
-            if (measuredWidth == 0) {
-                setTimeout(() => resized(width, root, svg), 12);
-                return;
-            }
-            let scale = width / measuredWidth;
-            svg.selectAll("line").attr("stroke-width", scale + "px");
-            svg.selectAll("text").attr("transform", "scale(" + scale + " " + scale + ")");
-        }
+        // function resized(width, root, svg) {
+        //     let measuredWidth = root.node().getBoundingClientRect().width;
+        //     if (measuredWidth == 0) {
+        //         setTimeout(() => resized(width, root, svg), 12);
+        //         return;
+        //     }
+        //     let scale = width / measuredWidth;
+        //     svg.selectAll("line").attr("stroke-width", scale + "px");
+        //     svg.selectAll("text").attr("transform", "scale(" + scale + " " + scale + ")");
+        // }
         getTooltipContents = d => {
+            console.log(d.properties);
             function getlowestfraction(x0) {
                 var eps = 0.01;
                 var h, h1, h2, k, k1, k2, a, x;
