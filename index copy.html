@@ -1,228 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+  </head>
 
-</head>
-
-<body>
+  <body>
     <center>
-        <h1 id="title">hello world</h1>
-
+      <h1 id="title">hello world</h1>
     </center>
     <div id="svg_by_d32" class="text-center"></div>
-    <h1>My first SVG</h1>
-    <div id="svg_by_d3" class="text-center"></div>
 
     <script type="text/javascript" src="d3.min.js"></script>
     <!-- <script type="text/javascript" src="data.js"></script> -->
     <script type="text/javascript" src="data copy.js"></script>
     <script type="text/javascript" src="topojson-client.min.js"></script>
     <script>
-        (() => {
-            const width = 975;
-            const height = 600;
+      (() => {
+        const width = simplemaps_worldmap_mapinfo.initial_view.x2;
+        const height = simplemaps_worldmap_mapinfo.initial_view.y2;
 
+        const root2 = d3.create("div").attr("class", "root");
 
-            const root2 = d3.create("div")
-                .attr("class", "root");
+        const svg = root2
+          .append("svg")
+          .attr("viewBox", [0, -20, width, height]);
 
-            const svg = root2.append("svg")
-                .attr("viewBox", [0, -20, width, height])
+        const g = svg.append("g");
 
-            const g = svg.append("g");
+        const paths = simplemaps_worldmap_mapinfo.paths;
 
-            const paths = simplemaps_countrymap_mapinfo.paths
+        for (const key in paths) {
+          const pathName = simplemaps_worldmap_mapinfo.names[key];
 
+          g.append("path")
+            .attr("cursor", "pointer")
+            .attr("fill", "#88A4BC")
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.75)
+            .on("click", clicked)
+            .attr("d", paths[key])
+            .attr("name", pathName)
+            .on("mouseover", function (d) {
+              // if (this.classList.contains("selected")) return;
+              this.classList.add("hovered");
+              d3.select(this)
+                .attr("stroke", "black")
+                .attr("fill", "#3B729F")
+                .attr("stroke-width", 3)
+                .raise();
+            })
+            .on("mousemove", function (event) {
+              const rootBounds = root2.node().getBoundingClientRect();
+              const mouseX = event.pageX - rootBounds.left;
+              const mouseY = event.pageY - rootBounds.top;
+            })
+            .on("mouseout", function () {
+              // if (this.classList.contains("selected")) return;
+              this.classList.remove("hovered");
+              d3.select(this)
+                .attr("stroke", "white")
+                .attr("fill", "#88A4BC")
+                .attr("stroke-width", 1)
+                .lower();
+            });
+          // console.log(`${key}: ${paths[key]}`);
+        }
 
-            for (const key in paths) {
-                const pathName = simplemaps_countrymap_mapinfo.names[key]
+        function clicked(d) {
+          // event.stopPropagation();
+          console.log(this.getAttribute("fill"));
+          if (!this.classList.contains("selected")) {
+            this.classList.add("selected");
+            // d3.select(this)
+            // .attr("stroke", "white")
+            // .attr("fill", "red")
+            // .attr("stroke-width", 1)
+            // .raise()
+          }
+          document.querySelector("#title").innerHTML =
+            this.getAttribute("name");
+        }
 
-                g.append("path")
-                    .attr("cursor", "pointer")
-                    .attr("fill", "#777")
-                    .attr("stroke", "white")
-                    .attr("stroke-width", 0.75)
-                    .on("click", clicked)
-                    .attr("d", paths[key])
-                    .attr("name", pathName)
-                    .on('mouseover', function (d) {
-                        // if (this.classList.contains("selected")) return;
-                        this.classList.add('hovered')
-                        d3.select(this)
-                            .attr("stroke", "black")
-                            .attr("fill", "green")
-                            .attr("stroke-width", 3)
-                            .raise()
-                    })
-                    .on('mousemove', function (event) {
-                        const rootBounds = root2.node().getBoundingClientRect();
-                        const mouseX = event.pageX - rootBounds.left;
-                        const mouseY = event.pageY - rootBounds.top;
-                    })
-                    .on('mouseout', function () {
-                        // if (this.classList.contains("selected")) return;
-                        this.classList.remove('hovered')
-                        d3.select(this)
-                            .attr("stroke", "white")
-                            .attr("fill", "#777")
-                            .attr("stroke-width", 1)
-                            .lower()
-                    });
-                // console.log(`${key}: ${paths[key]}`);
-            }
-
-
-            function clicked(d) {
-                // event.stopPropagation();
-                console.log(this.getAttribute("fill"));
-                if (!this.classList.contains("selected")) {
-                    this.classList.add("selected")
-                    // d3.select(this)
-                    // .attr("stroke", "white")
-                    // .attr("fill", "red")
-                    // .attr("stroke-width", 1)
-                    // .raise()
-
-                }
-                document.querySelector("#title").innerHTML = this.getAttribute("name")
-            }
-
-            document.querySelector("#svg_by_d32").append(root2.node())
-            return root2.node();
-        })()
+        document.querySelector("#svg_by_d32").append(root2.node());
+        return root2.node();
+      })();
     </script>
-    <script>
-            (() => {
-                const width = 975;
-                const height = 550;
-
-                // const zoom = d3.zoom()
-                //     .scaleExtent([1, 4])
-                //     .on("zoom", zoomed);
-
-                const root = d3.create("div")
-                    .attr("class", "root");
-
-                const svg = root.append("svg")
-                    .attr("viewBox", [0, -20, width, height])
-                // .on("click", reset);
-
-                const g = svg.append("g");
-
-
-                const projection = d3.geoAlbersUsa()
-                    .fitSize([width, height], topojson.feature(maryland, maryland.objects.Maryland_Counties))
-
-                const tooltip = root
-                    .append("div")
-                    .attr("class", "cooltip");
-
-                const path = d3.geoPath()
-                    .projection(projection);
-
-                // svg.append("g")
-                //     .attr("transform", "translate(20,35)")
-                // .append(() => legend({
-                //     color: d3.scaleSequential([extent[0], extent[1]], d3.interpolateOranges),
-                //     title: "Total cases per 100,000",
-                //     width: 300
-                // }));
-                // console.log(g);
-                g.append("g")
-                    .attr("cursor", "pointer")
-                    .attr("stroke", "grey")
-                    .attr("stroke-width", 0.75)
-                    .selectAll("path")
-                    .data(topojson.feature(maryland, maryland.objects.Maryland_Counties).features)
-                    .join("path")
-                    .attr("fill", "#333")
-                    .on("click", clicked)
-                    .attr("d", path)
-                    .on('mouseover', function (d) {
-                        this.classList.add('hovered')
-                        d3.select(this)
-                            .attr("stroke", "black")
-                            .attr("fill", "white")
-                            .attr("stroke-width", 3)
-                            .attr("name", 3)
-                            .raise()
-                        tooltip.style('display', '');
-                        let node = tooltip.node();
-                        node.innerHTML = "";
-                        // console.log(simplemaps_countrymap_mapinfo.paths);
-                        // node.appendChild(getTooltipContents(d));
-                    })
-                    .on('mousemove', function (event) {
-                        const rootBounds = root.node().getBoundingClientRect();
-                        const mouseX = event.pageX - rootBounds.left;
-                        const mouseY = event.pageY - rootBounds.top;
-                        tooltip
-                            .style('top', Math.min((mouseY - 10), root.node().offsetHeight - 135) + 'px')
-                            .style('left', (mouseX + 155 <= root.node().offsetWidth ? (mouseX + 10) : (mouseX - 155)) + 'px')
-                            .style('display', 'block')
-                    })
-                    .on('mouseout', function () {
-                        this.classList.remove('hovered')
-                        d3.select(this)
-                            .attr("stroke", null)
-                            .attr("fill", "#333")
-                            .attr("stroke-width", 1)
-                            .lower()
-                        tooltip.style('display', 'none')
-                    });
-
-                // svg.call(zoom);
-
-                // function reset() {
-                //     svg.transition().duration(750).call(
-                //         zoom.transform,
-                //         d3.zoomIdentity,
-                //         d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
-                //     );
-                // }
-
-                function clicked(d) {
-                    const [[x0, y0], [x1, y1]] = path.bounds(d);
-                    // console.log(this);
-                    event.stopPropagation();
-                    console.log(this.getAttribute("fill"));
-                    if (this.getAttribute("fill") === "white") {
-                        d3.select(this)
-                            .attr("stroke", "red")
-                            .attr("fill", "red")
-                            .attr("stroke-width", 3)
-                            .attr("name", 3)
-                            .raise()
-
-                    }
-                    // svg.transition().duration(750).call(
-                    // zoom.transform,
-                    // d3.zoomIdentity
-                    //     .translate(width / 2, height / 2)
-                    //     .scale(Math.min(3, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
-                    //     .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-                    // d3.mouse(svg.node())
-                    // );
-                }
-
-                // function zoomed() {
-                //     const { transform } = event;
-                //     g.attr("transform", transform);
-                //     g.attr("stroke-width", 1 / transform.k);
-                // }
-
-                // window.addEventListener("resize", () => resized(width, root, svg));
-                // setTimeout(() => resized(width, root, svg), 12);
-                // console.log(root);
-                document.querySelector("#svg_by_d3").append(root.node())
-                return root.node();
-            })()
-    </script>
-</body>
-
+  </body>
 </html>
