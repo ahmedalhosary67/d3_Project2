@@ -12,6 +12,11 @@
       <h1 id="title">hello world</h1>
     </center>
     <div id="svg_by_d32" class="text-center"></div>
+    <center>
+      <div id="svg_by_d3" class="text-center">
+        <h1 id="title2">Hello EGYPT</h1>
+      </div>
+    </center>
 
     <script type="text/javascript" src="d3.min.js"></script>
     <!-- <script type="text/javascript" src="data.js"></script> -->
@@ -44,7 +49,7 @@
             .attr("d", paths[key])
             .attr("name", pathName)
             .on("mouseover", function (d) {
-              // if (this.classList.contains("selected")) return;
+              if (this.classList.contains("selected")) return;
               this.classList.add("hovered");
               d3.select(this)
                 .attr("stroke", "black")
@@ -54,6 +59,77 @@
             })
             .on("mousemove", function (event) {
               const rootBounds = root2.node().getBoundingClientRect();
+              const mouseX = event.pageX - rootBounds.left;
+              const mouseY = event.pageY - rootBounds.top;
+            })
+            .on("mouseout", function () {
+              if (this.classList.contains("selected")) return;
+              this.classList.remove("hovered");
+              d3.select(this)
+                .attr("stroke", "white")
+                .attr("fill", "#88A4BC")
+                .attr("stroke-width", 1)
+                .lower();
+            });
+          // console.log(`${key}: ${paths[key]}`);
+        }
+
+        function clicked(d) {
+          // event.stopPropagation();
+          console.log(this.getAttribute("fill"));
+          if (!this.classList.contains("selected")) {
+            this.classList.add("selected");
+            createCountryMap();
+            d3.select(this)
+              .attr("stroke", "white")
+              .attr("fill", "red")
+              .attr("stroke-width", 1)
+              .raise();
+          }
+          document.querySelector("#title").innerHTML =
+            this.getAttribute("name");
+        }
+
+        document.querySelector("#svg_by_d32").append(root2.node());
+        return root2.node();
+      })();
+    </script>
+    <script>
+      const createCountryMap = () => {
+        // document.querySelector("#svg_by_d3").innerHTML = "";
+        const width = simplemaps_countrymap_mapinfo.initial_view.x2;
+        const height = simplemaps_countrymap_mapinfo.initial_view.y2;
+
+        const root = d3.create("div").attr("class", "root");
+
+        const svg = root.append("svg").attr("viewBox", [0, -20, width, height]);
+
+        const g = svg.append("g");
+
+        const paths = simplemaps_countrymap_mapinfo.paths;
+
+        for (const key in paths) {
+          const pathName = simplemaps_countrymap_mapinfo.names[key];
+
+          g.append("path")
+            .attr("cursor", "pointer")
+            .attr("fill", "#88A4BC")
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.75)
+            .on("click", clicked)
+            .attr("d", paths[key])
+            .attr("name", pathName)
+            .on("mouseover", function (d) {
+              // if (this.classList.contains("selected")) return;
+              this.classList.add("hovered");
+              d3.select(this)
+                .attr("stroke", "black")
+                .attr("fill", "#3B729F")
+                .attr("stroke-width", 3)
+                .raise();
+            })
+            .on("mousemove", function (event) {
+              const rootBounds = root.node().getBoundingClientRect();
               const mouseX = event.pageX - rootBounds.left;
               const mouseY = event.pageY - rootBounds.top;
             })
@@ -80,13 +156,13 @@
             // .attr("stroke-width", 1)
             // .raise()
           }
-          document.querySelector("#title").innerHTML =
+          document.querySelector("#title2").innerHTML =
             this.getAttribute("name");
         }
 
-        document.querySelector("#svg_by_d32").append(root2.node());
-        return root2.node();
-      })();
+        document.querySelector("#svg_by_d3").append(root.node());
+        return root.node();
+      };
     </script>
   </body>
 </html>
